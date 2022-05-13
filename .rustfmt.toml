@@ -1,0 +1,4 @@
+edition = "2018"
+unstable_features = true
+tab_spaces = 2
+blank_lines_upper_bound = 1
