@@ -23,7 +23,13 @@ fn smooth(data: Vec<Point>) -> Vec<Point> {
     _ => 0.,
   };
   let n = (0.002 * data.len() as f64).floor() - shift;
+
   data
+    .iter()
+    .map(|p| p.x)
+    .collect()
+    .windows(n)
+    .map(|arr| arr.iter().sum())
 }
 
 pub fn calculate_auto_correlation_function(data: Vec<Point>) -> Output {

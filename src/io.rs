@@ -1,12 +1,8 @@
-use std::{
-  fs::{read_to_string, write},
-  str::FromStr,
-  sync::WaitTimeoutResult,
-};
+use std::fs::{read_to_string, write};
 
 use regex::Regex;
 
-use crate::common::{DataSet, Output, Point, PulseWidth, Receiver, Sender, SenderStatus};
+use crate::common::{DataSet, Output, Point, Receiver, Sender, SenderStatus};
 
 pub struct FileReceiver {}
 impl Receiver for FileReceiver {
@@ -40,7 +36,7 @@ impl FileSender {
 }
 
 impl Sender for FileSender {
-  fn next(&mut self) -> Result<DataSet, crate::common::SenderStatus> {
+  fn next(&mut self) -> Result<DataSet, SenderStatus> {
     if self.i < 10 {
       let content = read_to_string(format!("./data/{}.txt", self.i)).unwrap();
       let re = Regex::new(r"^(\d+)\t(\d+)$").unwrap();
