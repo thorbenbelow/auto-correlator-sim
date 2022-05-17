@@ -14,9 +14,11 @@ pub trait Receiver {
   fn receive(&self, id: usize, data: Output) -> ();
 }
 
+#[derive(PartialEq)]
 pub enum SenderStatus {
   Empty,
   Waiting,
+  Next,
 }
 pub trait Sender {
   fn next(&mut self) -> Result<DataSet, SenderStatus>;

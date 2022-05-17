@@ -1,4 +1,4 @@
-use std::iter::Map;
+use std::cmp::Ordering;
 
 use crate::common::{Output, Point, PulseWidth};
 
@@ -22,20 +22,64 @@ fn smooth(data: Vec<Point>) -> Vec<Point> {
     0 => 1.,
     _ => 0.,
   };
-  let n = (0.002 * data.len() as f64).floor() - shift;
+  let l = data.len();
+  let n = (0.002 * l as f64).floor() - shift;
+  let tau = (n - 1.) / 2.;
 
   data
+    .windows(n as usize)
+    .map(|points| points.iter().map(|p| p.x).sum::<f64>() / n)
+    .zip(&data)
+    .map(|(new_x, old_point)| Point {
+      x: new_x,
+      y: old_point.y,
+    })
+    .skip(tau as usize)
+    .take(l - n as usize)
+    .collect::<Vec<_>>()
+}
+
+fn enveloping(data: &Vec<Point>) -> Vec<f64> {
+  let first_half = data
     .iter()
-    .map(|p| p.x)
-    .collect()
-    .windows(n)
-    .map(|arr| arr.iter().sum())
+    .map_while(|p| if p.y < 1. { Some(p.y) } else { None })
+    .scan(0., |max, y| {
+      if (*max).partial_cmp(&y) == Some(Ordering::Less) {
+        *max = y;
+      }
+      Some(*max)
+    });
+
+  let second_half = data
+    .iter()
+    .rev()
+    .map_while(|p| if p.y < 1. { Some(p.y) } else { None })
+    .scan(0., |max, y| {
+      if (*max).partial_cmp(&y) == Some(Ordering::Less) {
+        *max = y;
+      }
+      Some(*max)
+    });
+
+  first_half.chain(second_half).collect::<Vec<_>>()
+}
+
+fn pulsewidth(enveloping: &Vec<f64>) -> PulseWidth {
+  PulseWidth {
+    b: 1.2,
+    L: 3200,
+    R: 5400,
+  }
 }
 
 pub fn calculate_auto_correlation_function(data: Vec<Point>) -> Output {
+  let normed = norm(data);
+  let smoothed = smooth(normed);
+  let enveloping = enveloping(&smoothed);
+  let pw = pulsewidth(&enveloping);
   Output {
-    data: vec![Point { x: 1.1, y: 1.1 }],
-    enveloping: vec![1.1],
-    pw: PulseWidth { b: 1.1, L: 1, R: 2 },
+    data: smoothed,
+    enveloping,
+    pw,
   }
 }

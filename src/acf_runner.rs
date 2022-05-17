@@ -9,8 +9,12 @@ pub fn run_acf(mut sender: Box<dyn Sender + Send>, receiver: Box<dyn Receiver + 
   let (raw_data_sender, raw_data_receiver) = mpsc::channel();
   let (parsed_data_sender, parsed_data_receiver) = mpsc::channel();
 
-  let senderThread = thread::spawn(move || loop {
-    request_receiver.recv();
+  let sender_thread = thread::spawn(move || loop {
+    let next = request_receiver.recv();
+
+    if next != Ok(SenderStatus::Next) {
+      return;
+    }
 
     match sender.next() {
       Ok(data_set) => {
@@ -23,13 +27,13 @@ pub fn run_acf(mut sender: Box<dyn Sender + Send>, receiver: Box<dyn Receiver + 
             break;
           }
         },
-        SenderStatus::Empty => break,
+        _ => break,
       },
     }
   });
 
   let acf = thread::spawn(move || loop {
-    request_sender.send(true);
+    request_sender.send(SenderStatus::Next);
     let i = raw_data_receiver.recv();
     println!("ACF::Received");
     if let Ok(v) = i {
@@ -51,7 +55,7 @@ pub fn run_acf(mut sender: Box<dyn Sender + Send>, receiver: Box<dyn Receiver + 
     }
   });
 
-  senderThread.join().unwrap();
+  sender_thread.join().unwrap();
   receiverThread.join().unwrap();
   acf.join().unwrap();
 }

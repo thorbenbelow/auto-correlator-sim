@@ -10,7 +10,7 @@ impl Receiver for FileReceiver {
     write(
       format!("./data/out{}.txt", id),
       format!(
-        "# FWHM: {}, {}, {}\n{}",
+        "# FWHM = {}, {}, {}\n{}",
         data.pw.b,
         data.pw.L,
         data.pw.R,
