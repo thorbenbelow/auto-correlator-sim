@@ -28,16 +28,20 @@ impl Receiver for FileReceiver {
 
 pub struct FileSender {
   i: usize,
+  files: Vec<DataSet>,
 }
 impl FileSender {
   pub fn new() -> FileSender {
-    FileSender { i: 0 }
+    let mut f = FileSender {
+      i: 0,
+      files: vec![],
+    };
+    f.init();
+    f
   }
-}
 
-impl Sender for FileSender {
-  fn next(&mut self) -> Result<DataSet, SenderStatus> {
-    if self.i < 10 {
+  fn init(&mut self) -> () {
+    for i in 0..10 {
       let content = read_to_string(format!("./data/{}.txt", self.i)).unwrap();
       let re = Regex::new(r"^(\d+)\t(\d+)$").unwrap();
       let data = content
@@ -57,12 +61,18 @@ impl Sender for FileSender {
           }
         })
         .collect::<Vec<_>>();
+
+      self.files.push(DataSet { id: i, data });
+    }
+  }
+}
+
+impl Sender for FileSender {
+  fn next(&mut self) -> Result<DataSet, SenderStatus> {
+    if self.i < 10 {
       println!("Send file {}", self.i);
       self.i += 1;
-      Ok(DataSet {
-        id: self.i - 1,
-        data,
-      })
+      Ok(self.files.remove(self.i))
     } else {
       Err(SenderStatus::Empty)
     }

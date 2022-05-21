@@ -4,7 +4,7 @@ pub struct DataSet {
   pub data: Vec<Point>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Point {
   pub x: f64,
   pub y: f64,
