@@ -72,7 +72,7 @@ impl Sender for FileSender {
     if self.i < 10 {
       println!("Send file {}", self.i);
       self.i += 1;
-      Ok(self.files.remove(self.i))
+      Ok(self.files.pop().unwrap())
     } else {
       Err(SenderStatus::Empty)
     }
